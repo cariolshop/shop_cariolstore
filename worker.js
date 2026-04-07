@@ -543,6 +543,7 @@ function createMainLayout(currentDomain, data, type, query) {
     let currentPage = 1;
     let isLoading = false;
     let hasMore = true;
+    let isLoaderVisible = false;
     const type = '${type}';
     const query = '${isSearch ? escapeHTML(query).replace(/'/g, "\\'") : ''}';
     const grid = document.getElementById('productGrid');
@@ -552,10 +553,11 @@ function createMainLayout(currentDomain, data, type, query) {
 
     if (loader) {
       const observer = new IntersectionObserver((entries) => {
+        isLoaderVisible = entries[0].isIntersecting;
         if (entries[0].isIntersecting && !isLoading && hasMore) {
           loadMoreData();
         }
-      }, { rootMargin: '300px' });
+      }, { rootMargin: '1000px' });
       observer.observe(loader);
     }
 
@@ -594,6 +596,9 @@ function createMainLayout(currentDomain, data, type, query) {
         console.error("Gagal memuat:", e);
       }
       isLoading = false;
+      if (isLoaderVisible && hasMore) {
+        loadMoreData();
+      }
     }
   </script>
 </body>
