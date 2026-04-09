@@ -479,7 +479,6 @@ function createMainLayout(currentDomain, data, type, query) {
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="${currentDomain}${isSearch ? `/search?q=${encodeURIComponent(query)}` : '/'}">
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <link rel="alternate" type="application/rss+xml" title="${SITE_NAME} RSS Feed" href="${currentDomain}/feed.xml">
   
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${desc}">
