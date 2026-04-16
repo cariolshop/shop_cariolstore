@@ -3,6 +3,7 @@
 // =================================================================================
 const config = {
   DEBUG_MODE: false,
+  INFINITE_SCROLL: false, // Ubah ke 'true' untuk scroll otomatis, 'false' untuk tombol "Muat Lebih Banyak"
   CACHE_TTL: {
     HOMEPAGE: 3600, // 1 Jam
     SEARCH: 3600,   // 1 Jam
@@ -60,7 +61,7 @@ async function handleRequest(request) {
     if (pathname === '/ads.txt') return await handleAds();
     if (pathname === '/robots.txt') return await handleRobots(currentDomain);
     
-    // API Internal untuk Infinite Scroll
+    // API Internal untuk Pagination/Infinite Scroll
     if (pathname === '/api/items') return await handleApiItems(searchParams);
     
     // Route Pencarian
@@ -283,7 +284,7 @@ async function handleRobots(currentDomain) {
 }
 
 // =================================================================================
-// HTML Templates & UI Components (Profesional, Modern, & SEO Friendly)
+// HTML Templates & UI Components
 // =================================================================================
 
 function escapeHTML(text) {
@@ -297,8 +298,8 @@ function createCSS() {
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
   
   :root {
-    --primary: #ee4d2d; 
-    --primary-hover: #d73d20;
+    --primary: #1f73ff; 
+    --primary-hover: #20a3d7;
     --bg-color: #f8fafc;
     --card-bg: #ffffff;
     --text-main: #0f172a;
@@ -371,13 +372,35 @@ function createCSS() {
   .card:hover .btn-buy-text { transform: translateY(0); opacity: 1; }
   @media (max-width: 768px) { .btn-buy-text { transform: translateY(0); opacity: 1; font-size: 0.75rem; } .card-title { font-size: 0.8rem;} }
 
-  /* Loader Infinite Scroll */
+  /* Loader & Button Infinite Scroll */
   .loader { text-align: center; padding: 40px 0; color: var(--text-muted); font-weight: 500; display: none; }
   .loader.active { display: block; }
   .loader span { display: inline-block; width: 6px; height: 6px; background: var(--primary); border-radius: 50%; margin: 0 3px; animation: bounce 1.4s infinite ease-in-out both; }
   .loader span:nth-child(1) { animation-delay: -0.32s; }
   .loader span:nth-child(2) { animation-delay: -0.16s; }
   @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+  .btn-load-more {
+    display: inline-block;
+    margin: 30px auto;
+    padding: 14px 32px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 12px rgba(238, 77, 45, 0.25);
+  }
+  .btn-load-more:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(238, 77, 45, 0.35);
+  }
+  .btn-load-more:active { transform: translateY(0); }
+  .pagination-container { text-align: center; padding: 20px 0; }
 
   /* Product Detail Page */
   .detail-wrapper { background: var(--card-bg); border-radius: 24px; padding: 25px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 30px; max-width: 900px; margin: 0 auto; border: 1px solid var(--border); }
@@ -433,7 +456,7 @@ function renderCards(data) {
   }).join('');
 }
 
-// Layout Utama (Home & Search - Dioptimalkan untuk SEO Cariolshop & Cariolstore)
+// Layout Utama
 function createMainLayout(currentDomain, data, type, query) {
   const isSearch = type === 'search';
   const title = isSearch 
@@ -443,9 +466,8 @@ function createMainLayout(currentDomain, data, type, query) {
     ? `Temukan penawaran terbaik untuk ${escapeHTML(query)} di ${SITE_NAME}. Dapatkan kurasi produk unggulan dari ${ALT_SITE_NAME}.` 
     : `Jelajahi koleksi produk populer, tren fashion, elektronik, dan diskon terbaik hari ini di ${SITE_NAME}. Belanja aman dengan rekomendasi ${ALT_SITE_NAME}.`;
   
-  const currentYear = new Date().getFullYear(); // Tahun dinamis selalu dieksekusi
+  const currentYear = new Date().getFullYear();
 
-  // Schema.org Website & Organization
   const schemaMarkup = `
   {
     "@context": "https://schema.org",
@@ -505,7 +527,7 @@ function createMainLayout(currentDomain, data, type, query) {
   <main class="main-content container">
   <section class="ads">
   <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-8469029934963239" data-ad-slot="7614013167" data-ad-format="auto" data-full-width-responsive="true"></ins>
-  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <script>(adsbygoogle = window.adsbygoogle ||[]).push({});</script>
   </section>
 
     <h1 class="page-title">${isSearch ? `Hasil Pencarian: "${escapeHTML(query)}"` : `Rekomendasi Produk Terbaik ${SITE_NAME} & ${ALT_SITE_NAME}`}</h1>
@@ -514,10 +536,14 @@ function createMainLayout(currentDomain, data, type, query) {
       ${data && data.length > 0 ? renderCards(data) : '<p style="grid-column: 1/-1; text-align:center; padding: 80px 0; font-size: 1.1rem; color: #94a3b8;">Oops, tidak ada produk yang ditemukan.</p>'}
     </div>
     
-    ${data && data.length > 0 ? `
-    <div class="loader active" id="loader">
-      Menemukan lebih banyak... <span></span><span></span><span></span>
-    </div>` : ''}
+    <div class="pagination-container">
+      ${data && data.length > 0 ? (
+        config.INFINITE_SCROLL 
+        ? `<div class="loader active" id="loader">Menemukan lebih banyak... <span></span><span></span><span></span></div>`
+        : `<button id="btnLoadMore" class="btn-load-more">Muat Lebih Banyak Produk</button>
+           <div class="loader" id="loader">Memuat... <span></span><span></span><span></span></div>`
+      ) : ''}
+    </div>
 
     ${!isSearch ? `
     <section class="seo-section">
@@ -542,26 +568,35 @@ function createMainLayout(currentDomain, data, type, query) {
     let currentPage = 1;
     let isLoading = false;
     let hasMore = true;
-    let isLoaderVisible = false;
     const type = '${type}';
     const query = '${isSearch ? escapeHTML(query).replace(/'/g, "\\'") : ''}';
+    const isInfiniteScroll = ${config.INFINITE_SCROLL};
+    
     const grid = document.getElementById('productGrid');
     const loader = document.getElementById('loader');
+    const btnLoadMore = document.getElementById('btnLoadMore');
     
     const svgCart = \`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>\`;
 
-    if (loader) {
+    if (isInfiniteScroll && loader) {
       const observer = new IntersectionObserver((entries) => {
-        isLoaderVisible = entries[0].isIntersecting;
         if (entries[0].isIntersecting && !isLoading && hasMore) {
           loadMoreData();
         }
       }, { rootMargin: '1000px' });
       observer.observe(loader);
+    } else if (!isInfiniteScroll && btnLoadMore) {
+      btnLoadMore.addEventListener('click', () => {
+        if (!isLoading && hasMore) loadMoreData();
+      });
     }
 
     async function loadMoreData() {
       isLoading = true;
+      
+      if (!isInfiniteScroll && btnLoadMore) btnLoadMore.style.display = 'none';
+      if (loader) loader.classList.add('active');
+
       currentPage++;
       try {
         const res = await fetch(\`/api/items?type=\${type}&page=\${currentPage}\${query ? '&q='+encodeURIComponent(query) : ''}\`);
@@ -571,12 +606,10 @@ function createMainLayout(currentDomain, data, type, query) {
           json.data.forEach(item => {
             const div = document.createElement('div');
             div.className = 'card';
-            
             const safeLink = item.link.replace(/'/g, "\\\\'").replace(/"/g, "&quot;");
             
             div.setAttribute('onclick', \`window.open('\${safeLink}', '_blank', 'noopener,noreferrer')\`);
             div.setAttribute('title', item.linkName + ' - Rekomendasi ${ALT_SITE_NAME}');
-            
             div.innerHTML = \`
               <img src="\${item.image}" loading="lazy" alt="\${item.linkName} di ${SITE_NAME}">
               <div class="card-overlay">
@@ -586,18 +619,25 @@ function createMainLayout(currentDomain, data, type, query) {
             \`;
             grid.appendChild(div);
           });
+          
+          if (!isInfiniteScroll && btnLoadMore) btnLoadMore.style.display = 'inline-block';
+          if (!isInfiniteScroll && loader) loader.classList.remove('active');
+          
         } else {
           hasMore = false;
-          loader.innerHTML = "Semua inspirasi telah dimuat.";
-          loader.style.animation = "none";
+          if (loader) {
+            loader.innerHTML = "Semua inspirasi telah dimuat.";
+            loader.style.animation = "none";
+            loader.classList.add('active');
+          }
+          if (!isInfiniteScroll && btnLoadMore) btnLoadMore.style.display = 'none';
         }
       } catch (e) {
         console.error("Gagal memuat:", e);
+        if (!isInfiniteScroll && btnLoadMore) btnLoadMore.style.display = 'inline-block';
+        if (!isInfiniteScroll && loader) loader.classList.remove('active');
       }
       isLoading = false;
-      if (isLoaderVisible && hasMore) {
-        loadMoreData();
-      }
     }
   </script>
 </body>
