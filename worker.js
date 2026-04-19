@@ -678,7 +678,7 @@ function createProductDetailHTML(product, currentDomain, shopid, itemid) {
     <div class="container header-inner">
       <a href="/" class="logo" title="${SITE_NAME} | ${ALT_SITE_NAME}">${SITE_NAME}</a>
       <form class="search-form" action="/search" method="GET">
-        <input type="text" name="q" placeholder="Cari inspirasi produk..." required>
+        <input type="text" name="q" placeholder="Cari inspirasi produk..." autocomplete="off" required>
         <button type="submit" aria-label="Cari">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
@@ -687,6 +687,10 @@ function createProductDetailHTML(product, currentDomain, shopid, itemid) {
   </header>
 
   <main class="main-content container">
+  <section class="ads">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-8469029934963239" data-ad-slot="7614013167" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle ||[]).push({});</script>
+  </section>
     <article class="detail-wrapper">
       <div class="detail-img">
         <img src="${mainImage}" alt="${safeName} direkomendasikan oleh ${ALT_SITE_NAME}">
